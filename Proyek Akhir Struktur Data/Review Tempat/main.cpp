@@ -15,6 +15,113 @@ using namespace std;
 
 
 // STRUCT account - faiz
+struct Akun{
+    string username;
+    string password;
+};
+
+bool registerasi();
+bool login();
+bool cekUsername(string username);
+void menuLogin();
+bool loginBerhasil = false;
+
+void menuLogin(){
+    int pilihan;
+    cout << "Selamat Datang!\n";
+    cout << "Pilih salah satu menu di bawah:\n1. Register\n2. Login\n3. Keluar\nPilihan kamu: ";
+    cin >> pilihan;
+
+    if(pilihan == 1){
+        registerasi();
+    }else if(pilihan == 2){
+        loginBerhasil = login();
+    }else if(pilihan == 3){
+        cout << "Terima kasih telah menggunakan program ini.\n";
+        exit(0);
+    }else{
+        cout << "Pilihan tidak sesuai\n";
+        menuLogin();
+    }
+    
+}
+
+bool cekUsername(string username){
+    ifstream file("akun.csv");
+    string line, usernameAda;
+
+    while(getline(file, line)){
+        int pos = line.find(",");
+        usernameAda = line.substr(0, pos);
+
+        if(usernameAda == username){
+            return true;
+        }
+    }
+    return false;
+}
+
+bool registerasi(){
+    Akun akunBaru;
+    cout << "Username: ";
+    cin >> akunBaru.username;
+
+    if(cekUsername(akunBaru.username)){
+        cout << "Registrasi gagal, Username sudah ada!\n";
+        return false;
+    }else{
+        do{
+            cout << "Password (minimal 6 karakter): ";
+            cin >> akunBaru.password;
+            if(akunBaru.password.length() < 6) {
+                cout << "Password terlalu pendek! Minimal 6 karakter.\n";
+            }
+        } while(akunBaru.password.length() < 6);
+
+        ofstream file("akun.csv", ios::app);
+        if(file.is_open()){
+            file << akunBaru.username << "," << akunBaru.password << endl;
+            file.close();
+            cout << "Registrasi berhasil!\n";
+            return true;
+        }else{
+            cout << "Gagal membuka file eksternal!\n";
+            return false;
+        }
+    }
+    return false;
+}
+
+bool login(){
+    Akun akunLogin;
+    cout << "Username: ";
+    cin >> akunLogin.username;
+    cout << "Password: ";
+    cin >> akunLogin.password;
+
+    ifstream file("akun.csv");
+    string line;
+    bool loginBerhasil = false;
+
+    while(getline(file, line)){
+        int pos = line.find(",");
+        string usernameAda = line.substr(0, pos);
+        string passwordAda = line.substr(pos + 1);
+
+        if(usernameAda == akunLogin.username && passwordAda == akunLogin.password) {
+            loginBerhasil = true;
+            break;
+        }
+    }
+
+    if(loginBerhasil){
+        cout << "Login berhasil! Selamat datang, " << akunLogin.username << "!\n";
+        return true;
+    }else{
+        cout << "Login gagal! Username atau password salah.\n";
+        return false;
+    }
+}
 
 // STRUCT tempat  - rafif
 
@@ -39,18 +146,6 @@ struct StackNode {
 struct QueueNode {
     review data;
     QueueNode* next;
-};
-
-struct Tempat {
-    string nama_tempat;
-    string owner_tempat;
-    string alamat;
-    string deskripsi_tempat;
-};
-
-struct NodeTempat {
-    Tempat data;
-    NodeTempat* next;
 };
 
 void mergeSort(Node *&head, int &callstack);
@@ -321,58 +416,7 @@ void menghapus_review(Node *&head, int &jumlahLinked) {
     cout << "Review berhasil dihapus.\n";
 }
 
-void tambah_tempat(NodeTempat *&head, int &jumlahLinked) {
-    NodeTempat *nodeBaru = new NodeTempat;
-
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Bersihkan buffer sebelum getline
-    cout << "Masukkan Nama Tempat: ";
-    getline(cin, nodeBaru->data.nama_tempat);
-
-    cout << "Masukkan Owner Tempat (boleh kosong): ";
-    getline(cin, nodeBaru->data.owner_tempat);
-
-    cout << "Masukkan Alamat: ";
-    getline(cin, nodeBaru->data.alamat);
-
-    cout << "Masukkan Deskripsi Tempat (boleh kosong): ";
-    getline(cin, nodeBaru->data.deskripsi_tempat);
-
-    nodeBaru->next = nullptr;
-
-    if (head == nullptr) {
-        head = nodeBaru;
-    } else {
-        NodeTempat *temp = head;
-        while (temp->next != nullptr) {
-            temp = temp->next;
-        }
-        temp->next = nodeBaru;
-    }
-
-    cout << "Data tempat berhasil ditambahkan.\n";
-}
-
-
-void tampilkan_tempat(NodeTempat *head) {
-    if (head == nullptr) {
-        cout << "Tidak ada data tempat yang ditambahkan.\n";
-        return;
-    }
-
-    NodeTempat *temp = head;
-    int nomor = 1;
-    cout << "Data Tempat:\n";
-    while (temp != nullptr) {
-        cout << "No. " << nomor++ << endl;
-        cout << "--------------------------------" << endl;
-        cout << "Nama Tempat   : " << temp->data.nama_tempat << endl;
-        cout << "Owner Tempat  : " << (temp->data.owner_tempat.empty() ? "-" : temp->data.owner_tempat) << endl;
-        cout << "Alamat        : " << temp->data.alamat << endl;
-        cout << "Deskripsi     : " << (temp->data.deskripsi_tempat.empty() ? "-" : temp->data.deskripsi_tempat) << endl;
-        cout << endl;
-        temp = temp->next;
-    }
-}
+/////////BAGIAN MERGE SORT///////////
 
 /////////BAGIAN MERGE SORT///////////
 
@@ -733,13 +777,15 @@ void boyermooreSearch(Node *head, const string &pattern) {
 
 int main() {
     Node *head = nullptr;
-    NodeTempat *headTempat = nullptr;
     StackNode *top = nullptr;
     int callstack = 0;
     QueueNode *front = nullptr, *rear = nullptr;
     int jumlahLinked = 0 , jumlahStack = 0 , jumlahQueue = 0;
     int pilihan;
     string pattern;
+    while (!loginBerhasil){
+        menuLogin();
+    }
     while (true) {
         cout << "\nMenu Review Tempat\n";
         cout << "1. Menambahkan Review\n";
@@ -749,8 +795,6 @@ int main() {
         cout << "5. Mengurutkan Review\n";
         cout << "6. Mencari Review\n";
         cout << "7. Keluar\n";
-        cout << "8. Menambahkan Tempat\n";
-        cout << "9. Melihat Tempat\n";
         cout << "Pilihan: ";
         cin >> pilihan;
 
@@ -864,12 +908,6 @@ int main() {
             case 7:
                 cout << "Keluar dari program.\n";
                 return 0;
-            case 8:
-                tambah_tempat(headTempat, jumlahLinked);
-                break;
-            case 9:
-                tampilkan_tempat(headTempat);
-                break;
             default:
                 cout << "Pilihan tidak valid.\n";
         }
