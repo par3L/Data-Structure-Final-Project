@@ -488,7 +488,7 @@ void fibonacciSearch(Node *head, int x) {
         cout << "Tidak ada review yang ditambahkan.\n";
         return;
     }
-
+    // Membuat array dari linked list
     if (x < 1 || x > 5) {
         cout << "Penilaian harus berada di antara 1-5.\n";
         return;
@@ -502,24 +502,21 @@ void fibonacciSearch(Node *head, int x) {
     }
 
     int n = nodes.size();
-
-    int fibMMm2 = 0; 
-    int fibMMm1 = 1; 
-    int fibM = fibMMm2 + fibMMm1; 
-
-   
+    // Fibonacci numbers
+    int fibMMm2 = 0;
+    int fibMMm1 = 1;
+    int fibM = fibMMm2 + fibMMm1;
+    // Mencari nilai Fibonacci yang paling kecil yang lebih besar atau sama dengan n
     while (fibM < n) {
         fibMMm2 = fibMMm1;
         fibMMm1 = fibM;
         fibM = fibMMm2 + fibMMm1;
     }
-
-
+    // Offset untuk memeriksa elemen terakhir
     int offset = -1;
-
-    
+    bool found = false;
+    // Melakukan pencarian
     while (fibM > 1) {
-
         int i = min(offset + fibMMm2, n - 1);
 
         if (nodes[i]->data.penilaian < x) {
@@ -540,23 +537,31 @@ void fibonacciSearch(Node *head, int x) {
             cout << "Alamat: " << nodes[i]->data.alamat << "\n";
             cout << "Review: " << nodes[i]->data.review_ulasan << "\n";
             cout << "Penilaian: " << nodes[i]->data.penilaian << "\n";
-            return;
+            found = true;
+
+            // Lanjutkan pencarian dengan mengurangi nilai Fibonacci
+            fibM = fibMMm1;
+            fibMMm1 = fibMMm2;
+            fibMMm2 = fibM - fibMMm1;
+            offset = i;
         }
     }
 
-    if (fibMMm1 && nodes[offset + 1]->data.penilaian == x) {
+    // Cek elemen terakhir jika cocok dengan nilai yang dicari
+    if (!found && fibMMm1 && offset + 1 < n && nodes[offset + 1]->data.penilaian == x) {
         cout << "Review ditemukan:\n";
         cout << "ID: " << nodes[offset + 1]->data.id << "\n";
         cout << "Nama Tempat: " << nodes[offset + 1]->data.nama_tempat << "\n";
         cout << "Alamat: " << nodes[offset + 1]->data.alamat << "\n";
         cout << "Review: " << nodes[offset + 1]->data.review_ulasan << "\n";
         cout << "Penilaian: " << nodes[offset + 1]->data.penilaian << "\n";
-        return;
+        found = true;
     }
 
-    cout << "Review dengan penilaian " << x << " tidak ditemukan.\n";
+    if (!found) {
+        cout << "Review dengan penilaian " << x << " tidak ditemukan.\n";
+    }
 }
-
 
 void jumpSearch(Node *head, int x) {
     if (head == nullptr) {
@@ -568,18 +573,19 @@ void jumpSearch(Node *head, int x) {
         cout << "Penilaian harus berada di antara 1-5.\n";
         return;
     }
-
+    // Membuat array dari linked list
     vector<Node*> nodes;
     Node *temp = head;
     while (temp != nullptr) {
         nodes.push_back(temp);
         temp = temp->next;
     }
-
+    // Mencari review dengan penilaian x
     int n = nodes.size();
     int step = sqrt(n);
     int prev = 0;
 
+    // Melakukan jump search
     while (nodes[min(step, n) - 1]->data.penilaian < x) {
         prev = step;
         step += sqrt(n);
@@ -588,26 +594,26 @@ void jumpSearch(Node *head, int x) {
             return;
         }
     }
-
-    while (nodes[prev]->data.penilaian < x) {
-        prev++;
-        if (prev == min(step, n)) {
-            cout << "Review dengan penilaian " << x << " tidak ditemukan.\n";
-            return;
+    // Melakukan linear search
+    bool found = false;
+    while (prev < min(step, n) && nodes[prev]->data.penilaian <= x) {
+        if (nodes[prev]->data.penilaian == x) {
+            cout << "Review ditemukan:\n";
+            cout << "ID: " << nodes[prev]->data.id << "\n";
+            cout << "Nama Tempat: " << nodes[prev]->data.nama_tempat << "\n";
+            cout << "Alamat: " << nodes[prev]->data.alamat << "\n";
+            cout << "Review: " << nodes[prev]->data.review_ulasan << "\n";
+            cout << "Penilaian: " << nodes[prev]->data.penilaian << "\n";
+            found = true;
         }
+        prev++;
     }
 
-    if (nodes[prev]->data.penilaian == x) {
-        cout << "Review ditemukan:\n";
-        cout << "ID: " << nodes[prev]->data.id << "\n";
-        cout << "Nama Tempat: " << nodes[prev]->data.nama_tempat << "\n";
-        cout << "Alamat: " << nodes[prev]->data.alamat << "\n";
-        cout << "Review: " << nodes[prev]->data.review_ulasan << "\n";
-        cout << "Penilaian: " << nodes[prev]->data.penilaian << "\n";
-    } else {
+    if (!found) {
         cout << "Review dengan penilaian " << x << " tidak ditemukan.\n";
     }
 }
+
 
 
 void boyermooreSearch(Node *head, const string &pattern) {
@@ -615,36 +621,43 @@ void boyermooreSearch(Node *head, const string &pattern) {
         cout << "Tidak ada review yang ditambahkan.\n";
         return;
     }
-
+    // Membuat array dari linked list
     int m = pattern.size();
     if (m == 0) {
         cout << "Pola pencarian tidak boleh kosong.\n";
         return;
     }
 
-    // Membuat tabel pergeseran
+    // ubah jadi huruf kecil
+    string lowerPattern = pattern;
+    transform(lowerPattern.begin(), lowerPattern.end(), lowerPattern.begin(), ::tolower);
+
+    // tabel bad character
     vector<int> badChar(256, -1);
     for (int i = 0; i < m; i++) {
-        badChar[(int)pattern[i]] = i;
+        badChar[(int)lowerPattern[i]] = i;
     }
 
     Node *temp = head;
     bool found = false;
 
     while (temp != nullptr) {
+        // ubah text menjadi huruf kecil
         string text = temp->data.nama_tempat;
-        int n = text.size();
+        string lowerText = text;
+        transform(lowerText.begin(), lowerText.end(), lowerText.begin(), ::tolower);
+
+        int n = lowerText.size();
         int s = 0; // s adalah pergeseran dari pola terhadap teks
 
         while (s <= (n - m)) {
             int j = m - 1;
 
             // kurangi indeks j dari akhir ke awal
-            while (j >= 0 && pattern[j] == text[s + j]) {
+            while (j >= 0 && lowerPattern[j] == lowerText[s + j]) {
                 j--;
             }
-
-            // jika pola ditemukan
+            // jika j < 0, berarti pattern ditemukan
             if (j < 0) {
                 cout << "Review ditemukan:\n";
                 cout << "ID: " << temp->data.id << "\n";
@@ -655,8 +668,8 @@ void boyermooreSearch(Node *head, const string &pattern) {
                 found = true;
                 break;
             } else {
-                // pergeseran pola
-                s += max(1, j - badChar[(int)text[s + j]]);
+
+                s += max(1, j - badChar[(int)lowerText[s + j]]);
             }
         }
 
@@ -667,6 +680,7 @@ void boyermooreSearch(Node *head, const string &pattern) {
         cout << "Review dengan nama tempat \"" << pattern << "\" tidak ditemukan.\n";
     }
 }
+
 
 int main() {
     Node *head = nullptr;
