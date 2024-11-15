@@ -147,6 +147,7 @@ void mainMenu(NodeTempat *&placesHead, Node *head, int jumlahLinked)
 {
     int choice;
     bool flag = true;
+    int counter = 0;
 
     while (flag)
     {
@@ -163,6 +164,7 @@ void mainMenu(NodeTempat *&placesHead, Node *head, int jumlahLinked)
         case 1:
             tampilkan_tempat(placesHead);
             reviewSection(head, placesHead);
+            counter++;
             break;
         case 2:
             tambah_tempat(placesHead, jumlahLinked);
@@ -891,19 +893,36 @@ void displayPlaceReviews(Node *head, const string &kode)
         }
     }
 }
-
 void displayUserReviews(Node *head, string &username)
 {
     ifstream file("reviews.csv");
     if (!file.is_open())
     {
-        cout << "Error:  File tidak berhasil dibuka!.\n";
+        cout << "Error: File tidak berhasil dibuka!.\n";
         return;
     }
 
     map<string, string> placeMap;
-    bool foundReviews = false;
+    ifstream placeFile("tempat.csv"); 
+    if (!placeFile.is_open())
+    {
+        cout << "Error: Tidak dapat membuka file tempat.csv.\n";
+        return;
+    }
+
     string line;
+    while (getline(placeFile, line))
+    {
+        stringstream ss(line);
+        string placeID, placeName;
+        getline(ss, placeID, ',');  
+        getline(ss, placeName, ','); 
+        placeMap[placeID] = placeName;
+    }
+    placeFile.close();
+
+    bool foundReviews = false;
+
     while (getline(file, line))
     {
         stringstream ss(line);
@@ -918,14 +937,15 @@ void displayUserReviews(Node *head, string &username)
         {
             foundReviews = true;
 
-            string placeName = placeMap[newNode->data.id];
+            string placeName = placeMap.count(newNode->data.id) > 0 ? placeMap[newNode->data.id] : "Unknown Place";
 
-            cout << "Nama Tempat: " << placeName << endl;
-            cout << "Kode Tempat: " << newNode->data.id << endl;
-            cout << "Review: " << newNode->data.ulasan << endl;
-            cout << "Rating: " << newNode->data.penilaian << "/5\n";
+            cout << "Review ID    : " << newNode->data.id << endl;
+            cout << "Nama Tempat  : " << placeName << endl;  
+            cout << "Review       : " << newNode->data.ulasan << endl;
+            cout << "Rating       : " << newNode->data.penilaian << "/5\n";
             cout << "----------------------------------\n";
 
+            // Add review to the linked list (if needed)
             if (head == nullptr)
             {
                 head = newNode;
@@ -949,6 +969,7 @@ void displayUserReviews(Node *head, string &username)
         cout << "Belum ada review...\n";
     }
 }
+
 
 NodeTempat *merge(NodeTempat *left, NodeTempat *right)
 {
@@ -1209,6 +1230,7 @@ void updateReviewInFile(const string &username, const string &reviewID)
     ofstream tempFile("temp.csv");
 
     string line;
+    bool found = false;
     while (getline(file, line))
     {
         stringstream ss(line);
@@ -1225,34 +1247,41 @@ void updateReviewInFile(const string &username, const string &reviewID)
         review->data.ulasan = ulasan;
         review->data.penilaian = penilaian;
         reviews.push_back(review);
+
+        if (id == reviewID && user == username)
+        {
+            found = true;
+            Node *selectedReview = review;
+
+            cout << "Review yang dipilih:\n";
+            cout << "ID      : " << selectedReview->data.id << endl;
+            cout << "Review  : " << selectedReview->data.ulasan << endl;
+            cout << "Rating  : " << selectedReview->data.penilaian << endl;
+
+            cout << "Update?\n1. Review\n2. Rating\nChoice: ";
+            int choice;
+            cin >> choice;
+
+            if (choice == 1)
+            {
+                cout << "Text Review/Ulasan baru: ";
+                cin.ignore();
+                getline(cin, selectedReview->data.ulasan);
+            }
+            else if (choice == 2)
+            {
+                cout << "Penilaian (1-5): ";
+                cin >> selectedReview->data.penilaian;
+            }
+        }
     }
 
     file.close();
-    sort(reviews.begin(), reviews.end(), [](Node *a, Node *b)
-         { return a->data.id < b->data.id; });
-    int index = fibonacciSearch(reviews, reviewID);
 
-    if (index == -1)
+    if (!found)
     {
-        cout << "Review tidak di temukan!\n";
+        cout << "Review tidak ditemukan!\n";
         return;
-    }
-
-    Node *review = reviews[index];
-    cout << "Update?\n1. Review\n2. Rating\nChoice: ";
-    int choice;
-    cin >> choice;
-
-    if (choice == 1)
-    {
-        cout << "Text Review/Ulasan baru: ";
-        cin.ignore();
-        getline(cin, review->data.ulasan);
-    }
-    else if (choice == 2)
-    {
-        cout << "Penilaian (1-5): ";
-        cin >> review->data.penilaian;
     }
 
     for (auto &rev : reviews)
@@ -1292,7 +1321,6 @@ int jumpSearch(vector<Node *> &reviews, const string &reviewID)
         return prev;
     return -1;
 }
-
 void deleteReviewFromFile(const string &username, const string &reviewID)
 {
     vector<Node *> reviews;
@@ -1300,6 +1328,7 @@ void deleteReviewFromFile(const string &username, const string &reviewID)
     ofstream tempFile("temp.csv");
 
     string line;
+    bool found = false;
     while (getline(file, line))
     {
         stringstream ss(line);
@@ -1316,35 +1345,43 @@ void deleteReviewFromFile(const string &username, const string &reviewID)
         review->data.ulasan = ulasan;
         review->data.penilaian = penilaian;
         reviews.push_back(review);
+
+        if (id == reviewID && user == username)
+        {
+            found = true;
+            Node *selectedReview = review;
+            cout << "Review yang dipilih untuk dihapus:\n";
+            cout << "ID      : " << selectedReview->data.id << endl;
+            cout << "Review  : " << selectedReview->data.ulasan << endl;
+            cout << "Rating  : " << selectedReview->data.penilaian << endl;
+
+            cout << "Apakah anda yakin ingin menghapus review anda?\n1. Yes\n2. No\nPilihan: ";
+            int choice;
+            cin >> choice;
+
+            if (choice == 1)
+            {
+                reviews.erase(remove(reviews.begin(), reviews.end(), selectedReview), reviews.end());
+                cout << "Review berhasil dihapus!\n";
+            }
+            else
+            {
+                cout << "Review gagal di hapus...\n";
+            }
+        }
     }
 
     file.close();
-    sort(reviews.begin(), reviews.end(), [](Node *a, Node *b)
-         { return a->data.id < b->data.id; });
-    int index = jumpSearch(reviews, reviewID);
 
-    if (index == -1)
+    if (!found)
     {
-        cout << "Review tidak di temukan!\n";
+        cout << "Review tidak ditemukan atau anda tidak memiliki akses untuk menghapusnya.\n";
         return;
     }
 
-    cout << "Apakah anda yakin ingin menghapus review anda?\n1. Yes\n2. No\nPilihan: ";
-    int choice;
-    cin >> choice;
-
-    if (choice == 1)
+    for (auto &rev : reviews)
     {
-        reviews.erase(reviews.begin() + index);
-        for (auto &rev : reviews)
-        {
-            tempFile << rev->data.id << "," << rev->data.user << "," << rev->data.ulasan << "," << rev->data.penilaian << "\n";
-        }
-        cout << "Review berhasil dihapus!\n";
-    }
-    else
-    {
-        cout << "Review gagal di hapus...\n";
+        tempFile << rev->data.id << "," << rev->data.user << "," << rev->data.ulasan << "," << rev->data.penilaian << "\n";
     }
 
     tempFile.close();
