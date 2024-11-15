@@ -1,8 +1,8 @@
 #include <iostream>
-#include <limits> // Untuk clear buffer input
+#include <limits> // untuk clear buffer input
 #include <string>
 #include <vector>
-#include <cmath> // Untuk fungsi sqrt
+#include <cmath> // untuk fungsi sqrt
 #include <algorithm>
 #include <numeric>
 #include <iomanip>
@@ -10,11 +10,11 @@
 #include <fstream>
 #include <cstdlib>
 #include <ctime>
-#include <map>
+#include <map> // mapping file external
 
 using namespace std;
 
-string session;
+string session; // track user yang login
 
 struct Akun
 { // placeholder info akun, no linked list
@@ -63,6 +63,206 @@ struct QueueNode
     review data;
     QueueNode *next;
 };
+
+// prototype-prototypean
+bool containsChar(const string &str, char c);
+bool isValidEmail(const string &email);
+void saveAccount(const Akun &account);
+bool existsInCSV(const string &key, int column);
+bool registerAccount();
+bool validateLogin(const string &userOrEmail, const string &password);
+bool login();
+void menuLogin();
+
+int autoIncrementKode();
+void tambah_tempat(NodeTempat *&head, int &jumlahLinked);
+void tampilkan_tempat(NodeTempat *&head);
+void addReview(Node *&head, const string &username, const string &kode, NodeTempat *&placesHead);
+void displayPlaceReviews(Node *head, const string &kode);
+void displayUserReviews(Node *head, string &username);
+void mergeSort(NodeTempat *&head);
+NodeTempat *merge(NodeTempat *left, NodeTempat *right);
+NodeTempat *getTail(NodeTempat *cur);
+NodeTempat *partition(NodeTempat *head, NodeTempat *end, NodeTempat *&newHead, NodeTempat *&newEnd);
+void quickSort(NodeTempat *&head);
+NodeTempat *quickSortRecur(NodeTempat *head, NodeTempat *end);
+void SortbyReviews(NodeTempat *&placesHead, bool flag = true);
+void boyerMooreSearch(NodeTempat *head, const string &pattern);
+int fibonacciSearch(vector<Node *> &reviews, const string &reviewID);
+void updateReviewInFile(const string &username, const string &reviewID);
+int jumpSearch(vector<Node *> &reviews, const string &reviewID);
+void deleteReviewFromFile(const string &username, const string &reviewID);
+void editSection(Node *&head, const string &user);
+void reviewSection(Node *head, NodeTempat *placesHead);
+void mainMenu(NodeTempat *&placesHead, Node *head, int jumlahLinked);
+void pushToStack(StackNode *&top, const review &data);
+void enqueueToQueue(QueueNode *&front, QueueNode *&rear, const review &data);
+void loadStackQueue(StackNode *&stackTop, QueueNode *&queueFront, QueueNode *&queueRear);
+void displayStack(StackNode *top);
+void displayQueue(QueueNode *front);
+
+int main()
+{
+    menuLogin();
+    NodeTempat *placesHead = nullptr;
+    Node *head = nullptr;
+    int jumlahLinked = 0;
+    mainMenu(placesHead, head, jumlahLinked);
+    return 0;
+}
+
+
+void menuLogin()
+{
+    int choice;
+    bool flag = true;
+
+    while (flag)
+    {
+        cout << "Welcome!\n";
+        cout << "1. Register\n2. Login\n3. Exit\nPilihan: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
+            if (registerAccount())
+            {
+                cout << "Silahkan Login.\n";
+            }
+            break;
+        case 2:
+            flag = login();
+            break;
+        case 3:
+            cout << "Terimakasih. Goodbye!\n";
+            exit(0);
+        default:
+            cout << "Pilihan invalid. Coba lagi...\n";
+        }
+    }
+}
+
+// isi main menu
+void mainMenu(NodeTempat *&placesHead, Node *head, int jumlahLinked)
+{
+    int choice;
+    bool flag = true;
+
+    while (flag)
+    {
+        cout << "Main Menu\n";
+        cout << "1. Lihat Tempat\n";
+        cout << "2. Tambah Tempat\n";
+        cout << "3. Review Saya\n";
+        cout << "4. Stack & Queue\n";
+        cout << "5. Keluar\n";
+        cout << "Pilihan: ";
+        cin >> choice;
+        switch (choice)
+        {
+        case 1:
+            tampilkan_tempat(placesHead);
+            reviewSection(head, placesHead);
+            break;
+        case 2:
+            tambah_tempat(placesHead, jumlahLinked);
+            break;
+        case 3:
+            displayUserReviews(head, session);
+            editSection(head, session);
+            break;
+        case 4:
+            StackNode *stackTop = nullptr;
+            QueueNode *queueFront = nullptr, *queueRear = nullptr;
+
+            loadStackQueue(stackTop, queueFront, queueRear);
+
+            cout << "1. Tampilkan dengan Stack (LIFO)\n";
+            cout << "2. Tampilkan dengan Queue (FIFO)\n";
+            cout << "Pilihan: ";
+            int subChoice;
+            cin >> subChoice;
+            if (subChoice == 1) {
+                displayStack(stackTop);
+            } else if (subChoice == 2) {
+                displayQueue(queueFront);
+            } else {
+                cout << "Pilihan tidak valid.\n";
+            }
+            while (stackTop != nullptr) {
+                StackNode *temp = stackTop;
+                stackTop = stackTop->next;
+                delete temp;
+            }
+            while (queueFront != nullptr) {
+                QueueNode *temp = queueFront;
+                queueFront = queueFront->next;
+                delete temp;
+            }
+            break;
+        case 5:
+            flag = false;
+            break;
+        default:
+            cout << "Pilihan tidak valid.\n";
+        }
+    }
+}
+
+void reviewSection(Node *head, NodeTempat *placesHead)
+{
+    int choice, subchoice;
+    string pattern, kode;
+    cout << "1. Lihat Review Tempat\n";
+    cout << "2. Sort Tempat\n";
+    cout << "3. Cari Tempat\n";
+    cout << "Pilihan: ";
+    cin >> choice;
+
+    switch (choice)
+    {
+    case 1:
+        tampilkan_tempat(placesHead);
+        cout << "Input Kode :";
+        cin >> kode;
+        displayPlaceReviews(head, kode);
+        cout << "Ingin meninggalkan Review?\n";
+        cout << "1. Ya\n";
+        cout << "2. Tidak\n";
+        cin >> subchoice;
+        if (subchoice == 1)
+        {
+            addReview(head, session, kode, placesHead);
+        }
+        break;
+    case 2:
+        cout << "1. Sort Ascending (Merge Sort)\n";
+        cout << "2. Sort Descending (Quick Sort)\n";
+        cout << "Pilih metode sorting (berdasarkan jumlah review): ";
+        int sortChoice;
+        cin >> sortChoice;
+        if (sortChoice == 1)
+        {
+            SortbyReviews(placesHead, true);
+        }
+        else if (sortChoice == 2)
+        {
+            SortbyReviews(placesHead, false);
+        }
+        tampilkan_tempat(placesHead);
+        cout << "Tempat disortir.\n";
+        break;
+    case 3:
+        cout << "Cari nama tempat: ";
+        cin.ignore();
+        getline(cin, pattern);
+        boyerMooreSearch(placesHead, pattern);
+        break;
+    default:
+        cout << "Pilihan invalid.\n";
+    }
+}
 
 // cek chars ada di sebuah string
 bool containsChar(const string &str, char c)
@@ -129,7 +329,7 @@ bool registerAccount()
         return false;
     }
 
-    cin.ignore(); // Clear input buffer
+    cin.ignore(); // clear input buffer
     cout << "Email (optional, Enter to skip): ";
     getline(cin, newAccount.email);
     newAccount.email = newAccount.email.empty() ? "~" : newAccount.email;
@@ -203,34 +403,77 @@ bool login()
     return validateLogin(userOrEmail, password);
 }
 
-void menuLogin()
-{
-    int choice;
-    bool flag = true;
+void pushToStack(StackNode *&top, const review &data) {
+    StackNode *newNode = new StackNode;
+    newNode->data = data;
+    newNode->next = top;
+    top = newNode;
+}
 
-    while (flag)
-    {
-        cout << "Welcome!\n";
-        cout << "1. Register\n2. Login\n3. Exit\nPilihan: ";
-        cin >> choice;
+void enqueueToQueue(QueueNode *&front, QueueNode *&rear, const review &data) {
+    QueueNode *newNode = new QueueNode;
+    newNode->data = data;
+    newNode->next = nullptr;
+    if (rear == nullptr) {
+        front = rear = newNode;
+    } else {
+        rear->next = newNode;
+        rear = newNode;
+    }
+}
 
-        switch (choice)
-        {
-        case 1:
-            if (registerAccount())
-            {
-                cout << "Silahkan Login.\n";
-            }
-            break;
-        case 2:
-            flag = login();
-            break;
-        case 3:
-            cout << "Terimakasih. Goodbye!\n";
-            exit(0);
-        default:
-            cout << "Pilihan invalid. Coba lagi...\n";
-        }
+void loadStackQueue(StackNode *&stackTop, QueueNode *&queueFront, QueueNode *&queueRear) {
+    ifstream file("reviews.csv");
+    if (!file.is_open()) {
+        cout << "Error: Tidak dapat membuka file reviews.csv.\n";
+        return;
+    }
+
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        review rev;
+        getline(ss, rev.id, ',');
+        getline(ss, rev.user, ',');
+        getline(ss, rev.ulasan, ',');
+        ss >> rev.penilaian;
+
+        // Tambahkan ke Stack dan Queue
+        pushToStack(stackTop, rev);
+        enqueueToQueue(queueFront, queueRear, rev);
+    }
+    file.close();
+}
+
+void displayStack(StackNode *top) {
+    if (top == nullptr) {
+        cout << "Stack kosong. Tidak ada review untuk ditampilkan.\n";
+        return;
+    }
+
+    cout << "\nReviews (LIFO - Stack):\n";
+    while (top != nullptr) {
+        cout << "User: " << top->data.user << endl;
+        cout << "Review: " << top->data.ulasan << endl;
+        cout << "Rating: " << top->data.penilaian << "/5\n";
+        cout << "----------------------------------\n";
+        top = top->next;
+    }
+}
+
+void displayQueue(QueueNode *front) {
+    if (front == nullptr) {
+        cout << "Queue kosong. Tidak ada review untuk ditampilkan.\n";
+        return;
+    }
+
+    cout << "\nReviews (FIFO - Queue):\n";
+    while (front != nullptr) {
+        cout << "User: " << front->data.user << endl;
+        cout << "Review: " << front->data.ulasan << endl;
+        cout << "Rating: " << front->data.penilaian << "/5\n";
+        cout << "----------------------------------\n";
+        front = front->next;
     }
 }
 
@@ -302,7 +545,6 @@ void tambah_tempat(NodeTempat *&head, int &jumlahLinked)
 
 void tampilkan_tempat(NodeTempat *&head)
 {
-    // Step 1: Read review counts from reviews.csv
     ifstream reviewFile("reviews.csv");
     if (!reviewFile.is_open())
     {
@@ -313,7 +555,6 @@ void tampilkan_tempat(NodeTempat *&head)
     map<string, int> reviewCountMap;
     string line;
 
-    // Populate reviewCountMap with review counts for each place code
     while (getline(reviewFile, line))
     {
         stringstream ss(line);
@@ -323,7 +564,6 @@ void tampilkan_tempat(NodeTempat *&head)
     }
     reviewFile.close();
 
-    // Step 2: Load places from tempat.csv and update review counts
     ifstream placeFile("tempat.csv");
     if (!placeFile.is_open())
     {
@@ -331,7 +571,6 @@ void tampilkan_tempat(NodeTempat *&head)
         return;
     }
 
-    // Clear existing linked list if any
     while (head != nullptr)
     {
         NodeTempat *temp = head;
@@ -339,7 +578,6 @@ void tampilkan_tempat(NodeTempat *&head)
         delete temp;
     }
 
-    // Read tempat.csv and set up the linked list with correct review counts
     while (getline(placeFile, line))
     {
         stringstream ss(line);
@@ -351,11 +589,9 @@ void tampilkan_tempat(NodeTempat *&head)
         getline(ss, nodeBaru->data.alamat, ',');
         getline(ss, nodeBaru->data.deskripsi_tempat, ',');
 
-        // Set review_count based on reviewCountMap or default to 0 if no reviews
         nodeBaru->review_count = reviewCountMap[nodeBaru->data.kode];
         nodeBaru->next = nullptr;
 
-        // Add the new node to the linked list
         if (head == nullptr)
         {
             head = nodeBaru;
@@ -372,7 +608,6 @@ void tampilkan_tempat(NodeTempat *&head)
     }
     placeFile.close();
 
-    // Step 3: Display places with updated review counts
     if (head == nullptr)
     {
         cout << "Tidak ada data tempat yang ditambahkan.\n";
@@ -391,7 +626,7 @@ void tampilkan_tempat(NodeTempat *&head)
             cout << "Owner Tempat  : " << (temp->data.owner_tempat == "-" ? "-" : temp->data.owner_tempat) << endl;
             cout << "Alamat        : " << temp->data.alamat << endl;
             cout << "Deskripsi     : " << (temp->data.deskripsi_tempat == "-" ? "-" : temp->data.deskripsi_tempat) << endl;
-            cout << "Total Review  : " << temp->review_count << endl; // Displays updated count
+            cout << "Total Review  : " << temp->review_count << endl;
             cout << endl;
             temp = temp->next;
         }
@@ -450,13 +685,16 @@ void displayPlaceReviews(Node *head, const string &kode)
     }
 
     map<string, int> userReviewCount;
-    bool foundReviews = false;
+    map<string, vector<Node *>> userReviews;
     string line;
+    bool foundReviews = false;
 
+    // Baca file dan hitung kontribusi tiap user
     while (getline(file, line))
     {
         stringstream ss(line);
         Node *newNode = new Node;
+
         getline(ss, newNode->data.id, ',');
         getline(ss, newNode->data.user, ',');
         getline(ss, newNode->data.ulasan, ',');
@@ -467,12 +705,7 @@ void displayPlaceReviews(Node *head, const string &kode)
         {
             foundReviews = true;
             userReviewCount[newNode->data.user]++;
-
-            cout << "User: " << newNode->data.user << endl;
-            cout << "Review: " << newNode->data.ulasan << endl;
-            cout << "Rating: " << newNode->data.penilaian << "/5\n";
-            cout << "Contribution: " << userReviewCount[newNode->data.user] << endl;
-            cout << "----------------------------------\n";
+            userReviews[newNode->data.user].push_back(newNode);
 
             if (head == nullptr)
             {
@@ -495,6 +728,20 @@ void displayPlaceReviews(Node *head, const string &kode)
     if (!foundReviews)
     {
         cout << "Belum ada review...\n";
+        return;
+    }
+
+    // Tampilkan semua review dengan kontribusi yang sesuai
+    for (const auto &userReview : userReviews)
+    {
+        for (const auto &review : userReview.second)
+        {
+            cout << "User: " << review->data.user << endl;
+            cout << "Review: " << review->data.ulasan << endl;
+            cout << "Rating: " << review->data.penilaian << "/5\n";
+            cout << "Contribution: " << userReviewCount[review->data.user] << endl;
+            cout << "----------------------------------\n";
+        }
     }
 }
 
@@ -556,32 +803,6 @@ void displayUserReviews(Node *head, string &username)
     }
 }
 
-// void calculateReviewCounts(NodeTempat *&placesHead) { template
-//     ifstream file("reviews.csv");
-//     if (!file.is_open()) {
-//         cout << "Error: File tidak berhasil dibuka!.\n";
-//         return;
-//     }
-
-//     map<string, int> reviewCountMap;
-//     string line;
-
-//     while (getline(file, line)) {
-//         stringstream ss(line);
-//         string kode;
-//         getline(ss, kode, ',');
-//         reviewCountMap[kode]++;
-//     }
-//     file.close();
-
-//     NodeTempat *temp = placesHead;
-//     while (temp) {
-//         // Update each place's review count using the map
-//         temp->review_count = reviewCountMap[temp->data.kode];
-//         temp = temp->next;
-//     }
-// }
-
 NodeTempat *merge(NodeTempat *left, NodeTempat *right)
 {
     NodeTempat dummy;
@@ -640,7 +861,7 @@ NodeTempat *partition(NodeTempat *head, NodeTempat *end, NodeTempat *&newHead, N
     {
         NodeTempat *next = cur->next;
         if (cur->review_count > pivot->review_count)
-        { // Sort by review_count descending
+        { 
             cur->next = newHead;
             newHead = cur;
         }
@@ -782,50 +1003,61 @@ void boyerMooreSearch(NodeTempat *head, const string &pattern)
 }
 
 // Function to perform Fibonacci search for a review in the list by ID
-int fibonacciSearch(vector<Node*> &reviews, const string &reviewID) {
+int fibonacciSearch(vector<Node *> &reviews, const string &reviewID)
+{
     int fibM2 = 0;
     int fibM1 = 1;
     int fibM = fibM1 + fibM2;
     int n = reviews.size();
 
-    while (fibM < n) {
+    while (fibM < n)
+    {
         fibM2 = fibM1;
         fibM1 = fibM;
         fibM = fibM1 + fibM2;
     }
 
     int offset = -1;
-    while (fibM > 1) {
+    while (fibM > 1)
+    {
         int i = min(offset + fibM2, n - 1);
 
-        if (reviews[i]->data.id < reviewID) {
+        if (reviews[i]->data.id < reviewID)
+        {
             fibM = fibM1;
             fibM1 = fibM2;
             fibM2 = fibM - fibM1;
             offset = i;
-        } else if (reviews[i]->data.id > reviewID) {
+        }
+        else if (reviews[i]->data.id > reviewID)
+        {
             fibM = fibM2;
             fibM1 = fibM1 - fibM2;
             fibM2 = fibM - fibM1;
-        } else {
+        }
+        else
+        {
             return i;
         }
     }
 
-    if (fibM1 && reviews[offset + 1]->data.id == reviewID) {
+    if (fibM1 && reviews[offset + 1]->data.id == reviewID)
+    {
         return offset + 1;
     }
 
     return -1;
 }
 
-void updateReviewInFile(const string &username, const string &reviewID) {
-    vector<Node*> reviews;
+void updateReviewInFile(const string &username, const string &reviewID)
+{
+    vector<Node *> reviews;
     ifstream file("reviews.csv");
     ofstream tempFile("temp.csv");
 
     string line;
-    while (getline(file, line)) {
+    while (getline(file, line))
+    {
         stringstream ss(line);
         string id, user, ulasan;
         int penilaian;
@@ -843,10 +1075,12 @@ void updateReviewInFile(const string &username, const string &reviewID) {
     }
 
     file.close();
-    sort(reviews.begin(), reviews.end(), [](Node *a, Node *b) { return a->data.id < b->data.id; });
+    sort(reviews.begin(), reviews.end(), [](Node *a, Node *b)
+         { return a->data.id < b->data.id; });
     int index = fibonacciSearch(reviews, reviewID);
 
-    if (index == -1) {
+    if (index == -1)
+    {
         cout << "Review tidak di temukan!\n";
         return;
     }
@@ -856,16 +1090,20 @@ void updateReviewInFile(const string &username, const string &reviewID) {
     int choice;
     cin >> choice;
 
-    if (choice == 1) {
+    if (choice == 1)
+    {
         cout << "Text Review/Ulasan baru: ";
         cin.ignore();
         getline(cin, review->data.ulasan);
-    } else if (choice == 2) {
+    }
+    else if (choice == 2)
+    {
         cout << "Penilaian (1-5): ";
         cin >> review->data.penilaian;
     }
 
-    for (auto &rev : reviews) {
+    for (auto &rev : reviews)
+    {
         tempFile << rev->data.id << "," << rev->data.user << "," << rev->data.ulasan << "," << rev->data.penilaian << "\n";
     }
 
@@ -875,33 +1113,41 @@ void updateReviewInFile(const string &username, const string &reviewID) {
     cout << "Review Berhasil di update.\n";
 }
 
-int jumpSearch(vector<Node*> &reviews, const string &reviewID) {
+int jumpSearch(vector<Node *> &reviews, const string &reviewID)
+{
     int n = reviews.size();
     int step = sqrt(n);
     int prev = 0;
 
-    while (reviews[min(step, n) - 1]->data.id < reviewID) {
+    while (reviews[min(step, n) - 1]->data.id < reviewID)
+    {
         prev = step;
         step += sqrt(n);
-        if (prev >= n) return -1;
+        if (prev >= n)
+            return -1;
     }
 
-    while (reviews[prev]->data.id < reviewID) {
+    while (reviews[prev]->data.id < reviewID)
+    {
         prev++;
-        if (prev == min(step, n)) return -1;
+        if (prev == min(step, n))
+            return -1;
     }
 
-    if (reviews[prev]->data.id == reviewID) return prev;
+    if (reviews[prev]->data.id == reviewID)
+        return prev;
     return -1;
 }
 
-void deleteReviewFromFile(const string &username, const string &reviewID) {
-    vector<Node*> reviews;
+void deleteReviewFromFile(const string &username, const string &reviewID)
+{
+    vector<Node *> reviews;
     ifstream file("reviews.csv");
     ofstream tempFile("temp.csv");
 
     string line;
-    while (getline(file, line)) {
+    while (getline(file, line))
+    {
         stringstream ss(line);
         string id, user, ulasan;
         int penilaian;
@@ -919,26 +1165,32 @@ void deleteReviewFromFile(const string &username, const string &reviewID) {
     }
 
     file.close();
-    sort(reviews.begin(), reviews.end(), [](Node *a, Node *b) { return a->data.id < b->data.id; });
+    sort(reviews.begin(), reviews.end(), [](Node *a, Node *b)
+         { return a->data.id < b->data.id; });
     int index = jumpSearch(reviews, reviewID);
 
-    if (index == -1) {
+    if (index == -1)
+    {
         cout << "Review tidak di temukan!\n";
         return;
     }
 
-    cout << "Yakin?\n1. Yes\n2. No\nPilihan: ";
+    cout << "Are you sure you want to delete this review?\n1. Yes\n2. No\nChoice: ";
     int choice;
     cin >> choice;
 
-    if (choice == 1) {
+    if (choice == 1)
+    {
         reviews.erase(reviews.begin() + index);
-        for (auto &rev : reviews) {
+        for (auto &rev : reviews)
+        {
             tempFile << rev->data.id << "," << rev->data.user << "," << rev->data.ulasan << "," << rev->data.penilaian << "\n";
         }
-        cout << "Review berhasil dihapus.\n";
-    } else {
-        cout << "Review gagal dihapus.\n";
+        cout << "Review deleted successfully.\n";
+    }
+    else
+    {
+        cout << "Delete operation cancelled.\n";
     }
 
     tempFile.close();
@@ -946,7 +1198,8 @@ void deleteReviewFromFile(const string &username, const string &reviewID) {
     rename("temp.csv", "reviews.csv");
 }
 
-void editSection (Node *&head, const string &user){
+void editSection(Node *&head, const string &user)
+{
     int choice;
     string reviewID;
 
@@ -957,126 +1210,23 @@ void editSection (Node *&head, const string &user){
     cout << "Pilihan: ";
     cin >> choice;
 
-    switch (choice) {
+    switch (choice)
+    {
     case 1:
         displayUserReviews(head, session);
         cout << "Pilih review yang ingin di update (kode): ";
         cin >> reviewID;
-        updateReviewInFile(user, reviewID); 
+        updateReviewInFile(user, reviewID);
         break;
     case 2:
         cout << "Pilih review yang ingin di hapus (kode): ";
         cin >> reviewID;
-        deleteReviewFromFile(user, reviewID); 
+        deleteReviewFromFile(user, reviewID);
         break;
     case 3:
-        cout << "Kembali...\n";
+        cout << "Returning to the main menu.\n";
         return;
     default:
-        cout << "Pilihan tidak valid.\n";
+        cout << "Invalid choice.\n";
     }
-}
-
-void reviewSection(Node *head, NodeTempat *placesHead)
-{
-    int choice, subchoice;
-    string pattern, kode;
-    cout << "1. Lihat Review Tempat\n";
-    cout << "2. Sort Tempat\n";
-    cout << "3. Cari Tempat\n";
-    cout << "Pilihan: ";
-    cin >> choice;
-
-    switch (choice)
-    {
-    case 1:
-        tampilkan_tempat(placesHead);
-        cout << "Input Kode :";
-        cin >> kode;
-        displayPlaceReviews(head, kode);
-        cout << "Ingin meninggalkan Review?\n";
-        cout << "1. Ya\n";
-        cout << "2. Tidak\n";
-        cin >> subchoice;
-        if (subchoice == 1)
-        {
-            addReview(head, session, kode, placesHead);
-        }
-        break;
-    case 2:
-        cout << "1. Sort Ascending (Merge Sort)\n";
-        cout << "2. Sort Descending (Quick Sort)\n";
-        cout << "Pilih metode sorting (berdasarkan jumlah review): ";
-        int sortChoice;
-        cin >> sortChoice;
-        if (sortChoice == 1)
-        {
-            SortbyReviews(placesHead, true);
-        }
-        else if (sortChoice == 2)
-        {
-            SortbyReviews(placesHead, false);
-        }
-        tampilkan_tempat(placesHead);
-        cout << "Tempat disortir.\n";
-        break;
-    case 3:
-        cout << "Cari nama tempat: ";
-        cin.ignore();
-        getline(cin, pattern);
-        boyerMooreSearch(placesHead, pattern);
-        break;
-    default:
-        cout << "Pilihan invalid.\n";
-    }
-}
-
-// procedur to update/delete user reviews
-
-// Main Menu
-void mainMenu(NodeTempat *&placesHead, Node *head, int jumlahLinked)
-{
-    int choice;
-    bool flag = true;
-
-    while (flag)
-    {
-        cout << "Main Menu\n";
-        cout << "1. Lihat Tempat\n";
-        cout << "2. Tambah Tempat\n";
-        cout << "3. Review Saya\n";
-        cout << "4. Keluar\n";
-        cout << "Pilihan: ";
-        cin >> choice;
-        switch (choice)
-        {
-        case 1:
-            tampilkan_tempat(placesHead);
-            reviewSection(head, placesHead);
-            break;
-        case 2:
-            tambah_tempat(placesHead, jumlahLinked);
-            break;
-        case 3:
-            displayUserReviews(head, session);
-            editSection(head, session);
-            break;
-        case 4:
-            flag = false;
-            break;
-        default:
-            cout << "Pilihan tidak valid.\n";
-        }
-    }
-}
-
-int main()
-{
-    menuLogin();
-    string session;
-    NodeTempat *placesHead = nullptr;
-    Node *head = nullptr;
-    int jumlahLinked = 0;
-    mainMenu(placesHead, head, jumlahLinked);
-    return 0;
 }
