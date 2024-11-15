@@ -73,10 +73,10 @@ bool registerAccount();
 bool validateLogin(const string &userOrEmail, const string &password);
 bool login();
 void menuLogin();
-
 int autoIncrementKode();
 void tambah_tempat(NodeTempat *&head, int &jumlahLinked);
 void tampilkan_tempat(NodeTempat *&head);
+void tampilkan_tempatSort(NodeTempat *&head);
 void addReview(Node *&head, const string &username, const string &kode, NodeTempat *&placesHead);
 void displayPlaceReviews(Node *head, const string &kode);
 void displayUserReviews(Node *head, string &username);
@@ -225,6 +225,7 @@ void reviewSection(Node *head, NodeTempat *placesHead)
     cout << "1. Lihat Review Tempat\n";
     cout << "2. Sort Tempat\n";
     cout << "3. Cari Tempat\n";
+    cout << "4. Kembali\n";
     cout << "Pilihan: ";
     cin >> choice;
 
@@ -258,14 +259,14 @@ void reviewSection(Node *head, NodeTempat *placesHead)
         {
             SortbyReviews(placesHead, false);
         }
-        tampilkan_tempat(placesHead);
-        cout << "Tempat disortir.\n";
         break;
     case 3:
         cout << "Cari nama tempat: ";
         cin.ignore();
         getline(cin, pattern);
         boyerMooreSearch(placesHead, pattern);
+        break;
+    case 4:
         break;
     default:
         cout << "Pilihan invalid.\n";
@@ -524,33 +525,41 @@ void tambah_tempat(NodeTempat *&head, int &jumlahLinked)
     nodeBaru->data.kode = to_string(lastKode + 1);
 
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
     cout << "Masukkan Nama Tempat: ";
     getline(cin, nodeBaru->data.nama_tempat);
-    cout << "Masukkan Owner Tempat (boleh kosong): ";
-    getline(cin, nodeBaru->data.owner_tempat);
+    if (nodeBaru->data.nama_tempat.empty()) {
+        cout << "Error: Nama Tempat tidak boleh kosong.\n";
+        return; 
+    }
+
     cout << "Masukkan Alamat: ";
     getline(cin, nodeBaru->data.alamat);
+    if (nodeBaru->data.alamat.empty()) {
+        cout << "Error: Alamat tidak boleh kosong.\n";
+        return; 
+    }
+
+    cout << "Masukkan Owner Tempat (boleh kosong): ";
+    getline(cin, nodeBaru->data.owner_tempat);
+
     cout << "Masukkan Deskripsi Tempat (boleh kosong): ";
     getline(cin, nodeBaru->data.deskripsi_tempat);
+
     nodeBaru->next = nullptr;
 
-    if (head == nullptr)
-    {
+    if (head == nullptr) {
         head = nodeBaru;
-    }
-    else
-    {
+    } else {
         NodeTempat *temp = head;
-        while (temp->next != nullptr)
-        {
+        while (temp->next != nullptr) {
             temp = temp->next;
         }
         temp->next = nodeBaru;
     }
 
     ofstream file("tempat.csv", ios::app);
-    if (file.is_open())
-    {
+    if (file.is_open()) {
         file << nodeBaru->data.kode << ","
              << nodeBaru->data.nama_tempat << ","
              << (nodeBaru->data.owner_tempat.empty() ? "-" : nodeBaru->data.owner_tempat) << ","
@@ -558,9 +567,7 @@ void tambah_tempat(NodeTempat *&head, int &jumlahLinked)
              << (nodeBaru->data.deskripsi_tempat.empty() ? "-" : nodeBaru->data.deskripsi_tempat) << "\n";
         file.close();
         cout << "Data tempat berhasil ditambahkan ke file dan disimpan.\n";
-    }
-    else
-    {
+    } else {
         cout << "Error: Tidak dapat membuka file untuk menyimpan data.\n";
     }
 }
@@ -604,7 +611,6 @@ void tampilkan_tempat(NodeTempat *&head)
     {
         stringstream ss(line);
         NodeTempat *nodeBaru = new NodeTempat;
-
         getline(ss, nodeBaru->data.kode, ',');
         getline(ss, nodeBaru->data.nama_tempat, ',');
         getline(ss, nodeBaru->data.owner_tempat, ',');
@@ -655,6 +661,33 @@ void tampilkan_tempat(NodeTempat *&head)
     }
 }
 
+void tampilkan_tempatSort(NodeTempat *&head)
+{
+    if (!head)
+    {
+        cout << "Tidak ada data tempat yang ditambahkan.\n";
+        return;
+    }
+
+    NodeTempat *temp = head;
+    int nomor = 1;
+    cout << "Data Tempat:\n";
+    while (temp != nullptr)
+    {
+        cout << "No. " << nomor++ << endl;
+        cout << "--------------------------------" << endl;
+        cout << "Kode Tempat   : " << temp->data.kode << endl;
+        cout << "Nama Tempat   : " << temp->data.nama_tempat << endl;
+        cout << "Owner Tempat  : " << (temp->data.owner_tempat == "-" ? "-" : temp->data.owner_tempat) << endl;
+        cout << "Alamat        : " << temp->data.alamat << endl;
+        cout << "Deskripsi     : " << (temp->data.deskripsi_tempat == "-" ? "-" : temp->data.deskripsi_tempat) << endl;
+        cout << "Total Review  : " << temp->review_count << endl;
+        cout << endl;
+        temp = temp->next;
+    }
+}
+
+
 void addReview(Node *&head, const string &username, const string &kode, NodeTempat *&placesHead)
 {
     Node *newNode = new Node;
@@ -665,7 +698,15 @@ void addReview(Node *&head, const string &username, const string &kode, NodeTemp
     cin.ignore();
     getline(cin, newNode->data.ulasan);
 
-    cout << "rating (1-5): ";
+    do {
+        cout << "Rating (1-5): ";
+        cin >> newNode->data.penilaian;
+
+        if (newNode->data.penilaian < 1 || newNode->data.penilaian > 5) {
+            cout << "Error: Rating harus diantara 1 dan 5!.\n";
+        }
+    } while (newNode->data.penilaian < 1 || newNode->data.penilaian > 5);
+
     cin >> newNode->data.penilaian;
 
     newNode->next = nullptr;
@@ -761,7 +802,7 @@ void displayPlaceReviews(Node *head, const string &kode)
             cout << "User: " << review->data.user << endl;
             cout << "Review: " << review->data.ulasan << endl;
             cout << "Rating: " << review->data.penilaian << "/5\n";
-            cout << "Contribution: " << userReviewCount[review->data.user] << endl;
+            cout << "kontribusi: " << userReviewCount[review->data.user] << " post."<< endl;
             cout << "----------------------------------\n";
         }
     }
@@ -971,13 +1012,14 @@ void SortbyReviews(NodeTempat *&placesHead, bool flag)
     if (flag)
     {
         mergeSort(placesHead);
-        cout << "List sorted by total review count in ascending order (Merge Sort).\n";
+        cout << "List disortir berdasarkan jumlah review secara ascending (Merge Sort).\n";
     }
     else
     {
         quickSort(placesHead);
-        cout << "List sorted by total review count in descending order (Quick Sort).\n";
+        cout << "List disortir berdasarkan jumlah review secara descending (Quick Sort).\n";
     }
+    tampilkan_tempatSort(placesHead);
 }
 
 void boyerMooreSearch(NodeTempat *head, const string &pattern)
@@ -1011,6 +1053,11 @@ void boyerMooreSearch(NodeTempat *head, const string &pattern)
             {
                 found = true;
                 cout << "Tempat di temukan: " << temp->data.nama_tempat << " (kode: " << temp->data.kode << ")\n";
+                cout << "Owner Tempat  : " << (temp->data.owner_tempat == "-" ? "-" : temp->data.owner_tempat) << endl;
+                cout << "Alamat        : " << temp->data.alamat << endl;
+                cout << "Deskripsi     : " << (temp->data.deskripsi_tempat == "-" ? "-" : temp->data.deskripsi_tempat) << endl;
+                cout << "Total Review  : " << temp->review_count << endl;
+                cout << "" << endl;
                 break;
             }
             else
