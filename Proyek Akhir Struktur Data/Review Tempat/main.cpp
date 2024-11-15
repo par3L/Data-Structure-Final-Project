@@ -273,11 +273,11 @@ void reviewSection(Node *head, NodeTempat *placesHead)
         NodeTempat *firstMatch = nullptr;
         while (temp)
         {
-            if (temp->data.nama_tempat.find(pattern) != string::npos) 
+            if (temp->data.nama_tempat.find(pattern) != string::npos)
             {
                 if (matchCount == 0)
                 {
-                    firstMatch = temp; 
+                    firstMatch = temp;
                 }
                 matchCount++;
                 cout << matchCount << ". " << temp->data.nama_tempat << " (Kode: " << temp->data.kode << ")\n";
@@ -1074,9 +1074,9 @@ void SortbyReviews(NodeTempat *&placesHead, bool flag)
         return;
     }
 
-    map<string, int> reviewCountMap;  // seperti dictionary, dia akan ngambil user name sebagai key dan value kosong sebagai int
-    string line;                     // nantinya akan digunakan untuk mengiterasi setiap node untuk 
-                                    // menghitung berapa banyak review yang di tinggalkan oleh user tsb
+    map<string, int> reviewCountMap; // seperti dictionary, dia akan ngambil user name sebagai key dan value kosong sebagai int
+    string line;                     // nantinya akan digunakan untuk mengiterasi setiap node untuk
+                                     // menghitung berapa banyak review yang di tinggalkan oleh user tsb
     while (getline(file, line))
     {
         stringstream ss(line);
