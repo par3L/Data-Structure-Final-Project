@@ -111,7 +111,6 @@ int main()
     return 0;
 }
 
-
 void menuLogin()
 {
     int choice;
@@ -173,37 +172,46 @@ void mainMenu(NodeTempat *&placesHead, Node *head, int jumlahLinked)
             editSection(head, session);
             break;
         case 4:
+        {
             StackNode *stackTop = nullptr;
             QueueNode *queueFront = nullptr, *queueRear = nullptr;
-
             loadStackQueue(stackTop, queueFront, queueRear);
-
             cout << "1. Tampilkan dengan Stack (LIFO)\n";
             cout << "2. Tampilkan dengan Queue (FIFO)\n";
             cout << "Pilihan: ";
             int subChoice;
             cin >> subChoice;
-            if (subChoice == 1) {
+            if (subChoice == 1)
+            {
                 displayStack(stackTop);
-            } else if (subChoice == 2) {
+            }
+            else if (subChoice == 2)
+            {
                 displayQueue(queueFront);
-            } else {
+            }
+            else
+            {
                 cout << "Pilihan tidak valid.\n";
             }
-            while (stackTop != nullptr) {
+            while (stackTop != nullptr)
+            {
                 StackNode *temp = stackTop;
                 stackTop = stackTop->next;
                 delete temp;
             }
-            while (queueFront != nullptr) {
+            while (queueFront != nullptr)
+            {
                 QueueNode *temp = queueFront;
                 queueFront = queueFront->next;
                 delete temp;
             }
             break;
+        }
+
         case 5:
             flag = false;
             break;
+
         default:
             cout << "Pilihan tidak valid.\n";
         }
@@ -403,34 +411,42 @@ bool login()
     return validateLogin(userOrEmail, password);
 }
 
-void pushToStack(StackNode *&top, const review &data) {
+void pushToStack(StackNode *&top, const review &data)
+{
     StackNode *newNode = new StackNode;
     newNode->data = data;
     newNode->next = top;
     top = newNode;
 }
 
-void enqueueToQueue(QueueNode *&front, QueueNode *&rear, const review &data) {
+void enqueueToQueue(QueueNode *&front, QueueNode *&rear, const review &data)
+{
     QueueNode *newNode = new QueueNode;
     newNode->data = data;
     newNode->next = nullptr;
-    if (rear == nullptr) {
+    if (rear == nullptr)
+    {
         front = rear = newNode;
-    } else {
+    }
+    else
+    {
         rear->next = newNode;
         rear = newNode;
     }
 }
 
-void loadStackQueue(StackNode *&stackTop, QueueNode *&queueFront, QueueNode *&queueRear) {
+void loadStackQueue(StackNode *&stackTop, QueueNode *&queueFront, QueueNode *&queueRear)
+{
     ifstream file("reviews.csv");
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         cout << "Error: Tidak dapat membuka file reviews.csv.\n";
         return;
     }
 
     string line;
-    while (getline(file, line)) {
+    while (getline(file, line))
+    {
         stringstream ss(line);
         review rev;
         getline(ss, rev.id, ',');
@@ -445,14 +461,17 @@ void loadStackQueue(StackNode *&stackTop, QueueNode *&queueFront, QueueNode *&qu
     file.close();
 }
 
-void displayStack(StackNode *top) {
-    if (top == nullptr) {
+void displayStack(StackNode *top)
+{
+    if (top == nullptr)
+    {
         cout << "Stack kosong. Tidak ada review untuk ditampilkan.\n";
         return;
     }
 
     cout << "\nReviews (LIFO - Stack):\n";
-    while (top != nullptr) {
+    while (top != nullptr)
+    {
         cout << "User: " << top->data.user << endl;
         cout << "Review: " << top->data.ulasan << endl;
         cout << "Rating: " << top->data.penilaian << "/5\n";
@@ -461,14 +480,17 @@ void displayStack(StackNode *top) {
     }
 }
 
-void displayQueue(QueueNode *front) {
-    if (front == nullptr) {
+void displayQueue(QueueNode *front)
+{
+    if (front == nullptr)
+    {
         cout << "Queue kosong. Tidak ada review untuk ditampilkan.\n";
         return;
     }
 
     cout << "\nReviews (FIFO - Queue):\n";
-    while (front != nullptr) {
+    while (front != nullptr)
+    {
         cout << "User: " << front->data.user << endl;
         cout << "Review: " << front->data.ulasan << endl;
         cout << "Rating: " << front->data.penilaian << "/5\n";
@@ -861,7 +883,7 @@ NodeTempat *partition(NodeTempat *head, NodeTempat *end, NodeTempat *&newHead, N
     {
         NodeTempat *next = cur->next;
         if (cur->review_count > pivot->review_count)
-        { 
+        {
             cur->next = newHead;
             newHead = cur;
         }
@@ -918,7 +940,7 @@ void quickSort(NodeTempat *&head)
     head = quickSortRecur(head, getTail(head));
 }
 
-void SortbyReviews(NodeTempat *&placesHead, bool flag = true)
+void SortbyReviews(NodeTempat *&placesHead, bool flag)
 {
     ifstream file("reviews.csv");
     if (!file.is_open())
